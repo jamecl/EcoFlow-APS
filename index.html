@@ -72,7 +72,7 @@
             const [results, setResults] = useState({});
             
             useEffect(() => {
-                // Update capacity and output when purchase price changes
+                // Update capacity and output when purchase price changes (only for presets)
                 if (purchasePrice === 4400) {
                     setBatteryCount(1);
                     setSystemCapacity(6.1);
@@ -90,6 +90,7 @@
                     setSystemCapacity(24.4);
                     setSystemOutput(28.8);
                 }
+                // Don't change anything for custom prices (purchasePrice === 0 or other values)
             }, [purchasePrice]);
             
             useEffect(() => {
@@ -312,7 +313,12 @@
                                             <input
                                                 type="number"
                                                 placeholder="Enter custom price"
-                                                onChange={(e) => setPurchasePrice(Number(e.target.value))}
+                                                onChange={(e) => {
+                                                    const customPrice = Number(e.target.value);
+                                                    if (customPrice > 0) {
+                                                        setPurchasePrice(customPrice);
+                                                    }
+                                                }}
                                                 className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             />
                                         )}
