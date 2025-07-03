@@ -29,6 +29,7 @@
         const EcoFlowROICalculator = () => {
             // System specifications
             const [purchasePrice, setPurchasePrice] = useState(4400);
+            const [isCustomPrice, setIsCustomPrice] = useState(false);
             const [federalTaxCredit, setFederalTaxCredit] = useState(30);
             const [systemCapacity, setSystemCapacity] = useState(6.1);
             const [systemOutput, setSystemOutput] = useState(7.2);
@@ -279,26 +280,33 @@
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Purchase Price ($)</label>
                                         <select
-                                            value={purchasePrice}
+                                            value={isCustomPrice ? 'custom' : purchasePrice}
                                             onChange={(e) => {
-                                                const price = Number(e.target.value);
-                                                setPurchasePrice(price);
-                                                if (price === 4400) {
-                                                    setBatteryCount(1);
-                                                    setSystemCapacity(6.1);
-                                                    setSystemOutput(7.2);
-                                                } else if (price === 6699) {
-                                                    setBatteryCount(2);
-                                                    setSystemCapacity(12.2);
-                                                    setSystemOutput(14.4);
-                                                } else if (price === 8999) {
-                                                    setBatteryCount(3);
-                                                    setSystemCapacity(18.3);
-                                                    setSystemOutput(21.6);
-                                                } else if (price === 11299) {
-                                                    setBatteryCount(4);
-                                                    setSystemCapacity(24.4);
-                                                    setSystemOutput(28.8);
+                                                const value = e.target.value;
+                                                if (value === 'custom') {
+                                                    setIsCustomPrice(true);
+                                                    setPurchasePrice(0);
+                                                } else {
+                                                    setIsCustomPrice(false);
+                                                    const price = Number(value);
+                                                    setPurchasePrice(price);
+                                                    if (price === 4400) {
+                                                        setBatteryCount(1);
+                                                        setSystemCapacity(6.1);
+                                                        setSystemOutput(7.2);
+                                                    } else if (price === 6699) {
+                                                        setBatteryCount(2);
+                                                        setSystemCapacity(12.2);
+                                                        setSystemOutput(14.4);
+                                                    } else if (price === 8999) {
+                                                        setBatteryCount(3);
+                                                        setSystemCapacity(18.3);
+                                                        setSystemOutput(21.6);
+                                                    } else if (price === 11299) {
+                                                        setBatteryCount(4);
+                                                        setSystemCapacity(24.4);
+                                                        setSystemOutput(28.8);
+                                                    }
                                                 }
                                             }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -307,18 +315,13 @@
                                             <option value={6699}>$6,699 (2 batteries)</option>
                                             <option value={8999}>$8,999 (3 batteries)</option>
                                             <option value={11299}>$11,299 (4 batteries)</option>
-                                            <option value={0}>Custom Price</option>
+                                            <option value="custom">Custom Price</option>
                                         </select>
-                                        {purchasePrice === 0 && (
+                                        {isCustomPrice && (
                                             <input
                                                 type="number"
                                                 placeholder="Enter custom price"
-                                                onChange={(e) => {
-                                                    const customPrice = Number(e.target.value);
-                                                    if (customPrice > 0) {
-                                                        setPurchasePrice(customPrice);
-                                                    }
-                                                }}
+                                                onChange={(e) => setPurchasePrice(Number(e.target.value))}
                                                 className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             />
                                         )}
@@ -341,13 +344,14 @@
                                             value={batteryCount}
                                             onChange={(e) => setBatteryCount(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
+                                            disabled={!isCustomPrice && [4400, 6699, 8999, 11299].includes(purchasePrice)}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {purchasePrice === 4400 ? '$4,400 = 1 battery + inverter' : 
-                                             purchasePrice === 6699 ? '$6,699 = 2 batteries' :
-                                             purchasePrice === 8999 ? '$8,999 = 3 batteries' :
-                                             purchasePrice === 11299 ? '$11,299 = 4 batteries' : 
+                                            {!isCustomPrice ? 
+                                             (purchasePrice === 4400 ? '$4,400 = 1 battery + inverter' : 
+                                              purchasePrice === 6699 ? '$6,699 = 2 batteries' :
+                                              purchasePrice === 8999 ? '$8,999 = 3 batteries' :
+                                              purchasePrice === 11299 ? '$11,299 = 4 batteries' : '') :
                                              'Each battery: 6.1 kWh, 7.2 kW output'}
                                         </p>
                                     </div>
@@ -359,10 +363,10 @@
                                             value={systemCapacity}
                                             onChange={(e) => setSystemCapacity(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
+                                            disabled={!isCustomPrice && [4400, 6699, 8999, 11299].includes(purchasePrice)}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {[4400, 6699, 8999, 11299].includes(purchasePrice) ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
+                                            {!isCustomPrice ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
                                         </p>
                                     </div>
                                     <div>
@@ -373,10 +377,10 @@
                                             value={systemOutput}
                                             onChange={(e) => setSystemOutput(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
+                                            disabled={!isCustomPrice && [4400, 6699, 8999, 11299].includes(purchasePrice)}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {[4400, 6699, 8999, 11299].includes(purchasePrice) ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
+                                            {!isCustomPrice ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
                                         </p>
                                     </div>
                                 </div>
