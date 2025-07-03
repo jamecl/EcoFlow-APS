@@ -44,6 +44,13 @@
             const [peakSeasonMonths, setPeakSeasonMonths] = useState(6);
             const [cyclingDaysPerWeek, setCyclingDaysPerWeek] = useState(5);
             
+            // Realistic usage inputs
+            const [currentPeakDemand, setCurrentPeakDemand] = useState(5.0);
+            const [unrestrictedPeakDemand, setUnrestrictedPeakDemand] = useState(10.3);
+            const [acSeasonMonths, setAcSeasonMonths] = useState(6);
+            const [acRuntimeHours, setAcRuntimeHours] = useState(1.5);
+            const [useRealisticCalculation, setUseRealisticCalculation] = useState(true);
+            
             // Solar enhancement
             const [includeSolar, setIncludeSolar] = useState(false);
             const [solarPanels, setSolarPanels] = useState(2);
@@ -69,7 +76,8 @@
                 onPeakRate, demandCharge, utilityTaxRate, dailyCycling, peakSeasonMonths, 
                 cyclingDaysPerWeek, includeSolar, solarPanels, panelWattage, sunHours, 
                 solarCostPerPanel, solarInstallCost, includeSmartPanel, smartPanelCost, 
-                professionalInstallCost, permitsCost, miscHardwareCost, automationEfficiency]);
+                professionalInstallCost, permitsCost, miscHardwareCost, automationEfficiency,
+                currentPeakDemand, unrestrictedPeakDemand, acSeasonMonths, acRuntimeHours, useRealisticCalculation]);
             
             const calculateROI = () => {
                 // System costs
@@ -84,18 +92,51 @@
                 
                 const totalSystemCost = systemCostAfterCredit + solarCostAfterCredit + smartPanelCostAfterCredit;
                 
-                // Demand charge savings
-                const peakDemandReduction = Math.min(systemOutput, systemOutput);
-                const monthlyDemandSavings = peakDemandReduction * demandCharge;
-                const annualDemandSavings = monthlyDemandSavings * 12;
+                let annualDemandSavings, annualArbitrageSavings;
                 
-                // Energy arbitrage savings
-                const energyArbitrage = (onPeakRate - offPeakRate) / 100;
-                const dailyEnergyShifted = systemCapacity * (dailyCycling / 100) * 0.85;
-                const cyclingDaysPerYear = peakSeasonMonths * 30 * (cyclingDaysPerWeek / 7);
-                const annualArbitrageSavings = dailyEnergyShifted * energyArbitrage * cyclingDaysPerYear;
+                if (useRealisticCalculation) {
+                    // Realistic calculation based on actual usage patterns
+                    const batteriesCount = Math.ceil(purchasePrice / 1100); // Estimate batteries from price
+                    const totalBatteryOutput = batteriesCount * 7.2;
+                    
+                    // AC season demand savings (when AC would run unrestricted)
+                    const acSeasonDemandReduction = Math.min(totalBatteryOutput, unrestrictedPeakDemand);
+                    const acSeasonMonthlySavings = acSeasonDemandReduction * demandCharge;
+                    const acSeasonAnnualSavings = acSeasonMonthlySavings * acSeasonMonths;
+                    
+                    // Off season demand savings (current restricted usage)
+                    const offSeasonMonths = 12 - acSeasonMonths;
+                    const offSeasonDemandReduction = Math.min(totalBatteryOutput, currentPeakDemand);
+                    const offSeasonMonthlySavings = offSeasonDemandReduction * demandCharge;
+                    const offSeasonAnnualSavings = offSeasonMonthlySavings * offSeasonMonths;
+                    
+                    annualDemandSavings = acSeasonAnnualSavings + offSeasonAnnualSavings;
+                    
+                    // Energy arbitrage - AC energy shifting
+                    const acEnergyPerDay = unrestrictedPeakDemand * acRuntimeHours;
+                    const acDaysPerSeason = acSeasonMonths * 30;
+                    const acEnergyPerSeason = acEnergyPerDay * acDaysPerSeason;
+                    const acArbitrageSavings = acEnergyPerSeason * ((onPeakRate - offPeakRate) / 100);
+                    
+                    // Current peak period arbitrage (existing pattern)
+                    const currentPeakUsage = 1614; // From user's actual data
+                    const currentArbitrageSavings = currentPeakUsage * ((onPeakRate - offPeakRate) / 100);
+                    
+                    annualArbitrageSavings = acArbitrageSavings + currentArbitrageSavings;
+                    
+                } else {
+                    // Original generic calculation
+                    const peakDemandReduction = Math.min(systemOutput, systemOutput);
+                    const monthlyDemandSavings = peakDemandReduction * demandCharge;
+                    annualDemandSavings = monthlyDemandSavings * 12;
+                    
+                    const energyArbitrage = (onPeakRate - offPeakRate) / 100;
+                    const dailyEnergyShifted = systemCapacity * (dailyCycling / 100) * 0.85;
+                    const cyclingDaysPerYear = peakSeasonMonths * 30 * (cyclingDaysPerWeek / 7);
+                    annualArbitrageSavings = dailyEnergyShifted * energyArbitrage * cyclingDaysPerYear;
+                }
                 
-                // Solar savings
+                // Solar savings (unchanged)
                 let annualSolarSavings = 0;
                 
                 if (includeSolar) {
@@ -148,7 +189,8 @@
                     totalSavings10Year: totalAnnualSavings * 10,
                     netProfit10Year: totalAnnualSavings * 10 - totalSystemCost,
                     federalTaxSavings: purchasePrice * (federalTaxCredit / 100) + (totalSolarCost * (federalTaxCredit / 100)) + (totalSmartPanelCost * (federalTaxCredit / 100)),
-                    efficiencyMultiplier
+                    efficiencyMultiplier,
+                    useRealisticCalculation
                 });
             };
             
@@ -281,35 +323,100 @@
                                     <Calendar />
                                     <h2 className="text-xl font-semibold text-gray-800">Usage Patterns</h2>
                                 </div>
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Daily Battery Usage (%)</label>
+                                <div className="mb-4">
+                                    <label className="flex items-center gap-2">
                                         <input
-                                            type="number"
-                                            value={dailyCycling}
-                                            onChange={(e) => setDailyCycling(Number(e.target.value))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            type="checkbox"
+                                            checked={useRealisticCalculation}
+                                            onChange={(e) => setUseRealisticCalculation(e.target.checked)}
+                                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                                         />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Peak Season (months)</label>
-                                        <input
-                                            type="number"
-                                            value={peakSeasonMonths}
-                                            onChange={(e) => setPeakSeasonMonths(Number(e.target.value))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Cycling Days/Week</label>
-                                        <input
-                                            type="number"
-                                            value={cyclingDaysPerWeek}
-                                            onChange={(e) => setCyclingDaysPerWeek(Number(e.target.value))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
+                                        <span className="text-sm font-medium text-gray-700">Use Realistic Usage-Based Calculation</span>
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-1">Based on actual restricted vs unrestricted usage patterns</p>
                                 </div>
+                                
+                                {useRealisticCalculation ? (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Peak Demand (kW)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={currentPeakDemand}
+                                                onChange={(e) => setCurrentPeakDemand(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Your current peak due to cost avoidance</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Unrestricted Peak Demand (kW)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={unrestrictedPeakDemand}
+                                                onChange={(e) => setUnrestrictedPeakDemand(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">What you'd use with AC running freely</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">AC Season (months)</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="12"
+                                                value={acSeasonMonths}
+                                                onChange={(e) => setAcSeasonMonths(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Months when AC would run (Apr-Sep = 6)</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">AC Runtime During Peak (hours)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                min="0"
+                                                max="3"
+                                                value={acRuntimeHours}
+                                                onChange={(e) => setAcRuntimeHours(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Hours AC would run during 4-7pm period</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Daily Battery Usage (%)</label>
+                                            <input
+                                                type="number"
+                                                value={dailyCycling}
+                                                onChange={(e) => setDailyCycling(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Peak Season (months)</label>
+                                            <input
+                                                type="number"
+                                                value={peakSeasonMonths}
+                                                onChange={(e) => setPeakSeasonMonths(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Cycling Days/Week</label>
+                                            <input
+                                                type="number"
+                                                value={cyclingDaysPerWeek}
+                                                onChange={(e) => setCyclingDaysPerWeek(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -509,6 +616,11 @@
                                             ⚠️ Without Smart Panel: Manual switching assumed (70% efficiency)
                                         </div>
                                     )}
+                                    {results.useRealisticCalculation && (
+                                        <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                                            ✓ Using realistic calculation based on your actual usage patterns
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -568,10 +680,11 @@
                         <h3 className="text-lg font-semibold text-gray-800 mb-3">Important Notes</h3>
                         <div className="text-sm text-gray-600 space-y-2">
                             <p>• Federal tax credit of 30% expires December 31, 2025</p>
-                            <p>• Calculations assume daily cycling during peak demand periods</p>
+                            <p>• Realistic mode accounts for current restricted usage vs unrestricted AC usage</p>
                             <p>• Demand charge savings assume battery can reduce peak demand during 4-7pm period</p>
                             <p>• Solar calculations include system efficiency losses and net metering assumptions</p>
                             <p>• Smart Home Panel 2 required for automatic switching - manual switching assumes 70% efficiency</p>
+                            <p>• Seasonal calculations differentiate AC season vs off-season usage patterns</p>
                             <p>• Actual results may vary based on usage patterns, weather, and utility rate changes</p>
                         </div>
                     </div>
