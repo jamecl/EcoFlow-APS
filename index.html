@@ -72,6 +72,27 @@
             const [results, setResults] = useState({});
             
             useEffect(() => {
+                // Update capacity and output when purchase price changes
+                if (purchasePrice === 4400) {
+                    setBatteryCount(1);
+                    setSystemCapacity(6.1);
+                    setSystemOutput(7.2);
+                } else if (purchasePrice === 6699) {
+                    setBatteryCount(2);
+                    setSystemCapacity(12.2);
+                    setSystemOutput(14.4);
+                } else if (purchasePrice === 8999) {
+                    setBatteryCount(3);
+                    setSystemCapacity(18.3);
+                    setSystemOutput(21.6);
+                } else if (purchasePrice === 11299) {
+                    setBatteryCount(4);
+                    setSystemCapacity(24.4);
+                    setSystemOutput(28.8);
+                }
+            }, [purchasePrice]);
+            
+            useEffect(() => {
                 calculateROI();
             }, [purchasePrice, federalTaxCredit, systemCapacity, systemOutput, batteryCount, offPeakRate, 
                 onPeakRate, demandCharge, utilityTaxRate, dailyCycling, peakSeasonMonths, 
@@ -329,10 +350,7 @@
                                         <input
                                             type="number"
                                             step="0.1"
-                                            value={[4400, 6699, 8999, 11299].includes(purchasePrice) ? 
-                                                (purchasePrice === 4400 ? 6.1 : 
-                                                 purchasePrice === 6699 ? 12.2 :
-                                                 purchasePrice === 8999 ? 18.3 : 24.4) : systemCapacity}
+                                            value={systemCapacity}
                                             onChange={(e) => setSystemCapacity(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
@@ -346,10 +364,7 @@
                                         <input
                                             type="number"
                                             step="0.1"
-                                            value={[4400, 6699, 8999, 11299].includes(purchasePrice) ? 
-                                                (purchasePrice === 4400 ? 7.2 : 
-                                                 purchasePrice === 6699 ? 14.4 :
-                                                 purchasePrice === 8999 ? 21.6 : 28.8) : systemOutput}
+                                            value={systemOutput}
                                             onChange={(e) => setSystemOutput(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
