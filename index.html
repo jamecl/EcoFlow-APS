@@ -1,74 +1,4 @@
-<div className="bg-white rounded-xl shadow-lg p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <TrendingUp />
-                                    <h2 className="text-xl font-semibold text-gray-800">Key Results</h2>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="bg-green-50 rounded-lg p-4">
-                                        <div className="text-sm text-green-600 font-medium">Payback Period</div>
-                                        <div className="text-2xl font-bold text-green-800">{(results.paybackYears || 0).toFixed(1)} years</div>
-                                    </div>
-                                    <div className="bg-blue-50 rounded-lg p-4">
-                                        <div className="text-sm text-blue-600 font-medium">Monthly Savings</div>
-                                        <div className="text-2xl font-bold text-blue-800">{formatCurrency(results.monthlyNetProfit || 0)}</div>
-                                    </div>
-                                    <div className="bg-purple-50 rounded-lg p-4">
-                                        <div className="text-sm text-purple-600 font-medium">10-Year ROI</div>
-                                        <div className="text-2xl font-bold text-purple-800">{formatPercent(results.roi10Year || 0)}</div>
-                                    </div>
-                                    <div className="bg-yellow-50 rounded-lg p-4">
-                                        <div className="text-sm text-yellow-600 font-medium">Annualized Return</div>
-                                        <div className="text-2xl font-bold text-yellow-800">{formatPercent(results.annualizedReturn || 0)}</div>
-                                    </div>
-                                    {results.actualBatteryCount && (
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="text-sm text-gray-600 font-medium">System Configuration</div>
-                                            <div className="text-lg font-bold text-gray-800">{results.actualBatteryCount} Batteries</div>
-                                            <div className="text-xs text-gray-500">
-                                                {(results.actualSystemCapacity || 0).toFixed(1)} kWh, {(results.actualSystemOutput || 0).toFixed(1)} kW
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {useRealisticCalculation && results.actualBatteryCount && (
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">AC Capability Analysis</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Can Handle 5-ton AC:</span>
-                                            <span className={`font-medium ${results.canHandleAC ? 'text-green-600' : 'text-red-600'}`}>
-                                                {results.canHandleAC ? 'YES' : 'NO'}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">AC-Only Runtime:</span>
-                                            <span className="font-medium">{(results.acRuntimeCapability || 0).toFixed(1)} hours</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">AC + Household Runtime:</span>
-                                            <span className="font-medium">{(results.acPlusHouseholdRuntime || 0).toFixed(1)} hours</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Target Runtime (1.5h):</span>
-                                            <span className={`font-medium ${(results.acPlusHouseholdRuntime || 0) >= 1.5 ? 'text-green-600' : 'text-yellow-600'}`}>
-                                                {(results.acPlusHouseholdRuntime || 0) >= 1.5 ? '✅ MEETS TARGET' : '⚠️ BELOW TARGET'}
-                                            </span>
-                                        </div>
-                                        {results.actualBatteryCount === 3 && (results.acPlusHouseholdRuntime || 0) < 1.5 && (
-                                            <div className="mt-3 p-3 bg-yellow-50 rounded text-sm text-yellow-700">
-                                                💡 Consider smart AC cycling or adding 4th battery for full 1.5h runtime
-                                            </div>
-                                        )}
-                                        {results.actualBatteryCount === 1 && !results.canHandleAC && (
-                                            <div className="mt-3 p-3 bg-red-50 rounded text-sm text-red-700">
-                                                ❌ Single battery cannot run 5-ton AC. Consider 3-battery option at same price.
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -100,9 +30,9 @@
             // System specifications
             const [purchasePrice, setPurchasePrice] = useState(4400);
             const [federalTaxCredit, setFederalTaxCredit] = useState(30);
-            const [systemCapacity, setSystemCapacity] = useState(18.3);
-            const [systemOutput, setSystemOutput] = useState(21.6);
-            const [batteryCount, setBatteryCount] = useState(3);
+            const [systemCapacity, setSystemCapacity] = useState(6.1);
+            const [systemOutput, setSystemOutput] = useState(7.2);
+            const [batteryCount, setBatteryCount] = useState(1);
             
             // Rate structure
             const [offPeakRate, setOffPeakRate] = useState(5.943);
@@ -167,17 +97,22 @@
                 let actualBatteryCount, actualSystemCapacity, actualSystemOutput;
                 
                 if (purchasePrice === 4400) {
-                    // $4,400 preset - use the batteryCount selector to choose 1 or 3
-                    actualBatteryCount = batteryCount;
-                    actualSystemCapacity = batteryCount * 6.1;
-                    actualSystemOutput = batteryCount * 7.2;
-                } else if (purchasePrice === 11099) {
-                    // $11,099 preset - fixed 4 batteries
+                    actualBatteryCount = 1;
+                    actualSystemCapacity = 1 * 6.1;
+                    actualSystemOutput = 1 * 7.2;
+                } else if (purchasePrice === 6699) {
+                    actualBatteryCount = 2;
+                    actualSystemCapacity = 2 * 6.1;
+                    actualSystemOutput = 2 * 7.2;
+                } else if (purchasePrice === 8999) {
+                    actualBatteryCount = 3;
+                    actualSystemCapacity = 3 * 6.1;
+                    actualSystemOutput = 3 * 7.2;
+                } else if (purchasePrice === 11299) {
                     actualBatteryCount = 4;
                     actualSystemCapacity = 4 * 6.1;
                     actualSystemOutput = 4 * 7.2;
                 } else {
-                    // Custom pricing - use manual inputs for everything
                     actualBatteryCount = batteryCount;
                     actualSystemCapacity = systemCapacity;
                     actualSystemOutput = systemOutput;
@@ -186,15 +121,12 @@
                 let annualDemandSavings, annualArbitrageSavings;
                 
                 if (useRealisticCalculation) {
-                    // Realistic calculation based on actual usage patterns
                     const totalBatteryOutput = actualSystemOutput;
                     
-                    // AC season demand savings (when AC would run unrestricted)
                     const acSeasonDemandReduction = Math.min(totalBatteryOutput, unrestrictedPeakDemand);
                     const acSeasonMonthlySavings = acSeasonDemandReduction * demandCharge;
                     const acSeasonAnnualSavings = acSeasonMonthlySavings * acSeasonMonths;
                     
-                    // Off season demand savings (current restricted usage)
                     const offSeasonMonths = 12 - acSeasonMonths;
                     const offSeasonDemandReduction = Math.min(totalBatteryOutput, currentPeakDemand);
                     const offSeasonMonthlySavings = offSeasonDemandReduction * demandCharge;
@@ -202,20 +134,17 @@
                     
                     annualDemandSavings = acSeasonAnnualSavings + offSeasonAnnualSavings;
                     
-                    // Energy arbitrage - AC energy shifting
                     const acEnergyPerDay = unrestrictedPeakDemand * acRuntimeHours;
                     const acDaysPerSeason = acSeasonMonths * 30;
                     const acEnergyPerSeason = acEnergyPerDay * acDaysPerSeason;
                     const acArbitrageSavings = acEnergyPerSeason * ((onPeakRate - offPeakRate) / 100);
                     
-                    // Current peak period arbitrage (existing pattern)
-                    const currentPeakUsage = 1614; // From user's actual data
+                    const currentPeakUsage = 1614;
                     const currentArbitrageSavings = currentPeakUsage * ((onPeakRate - offPeakRate) / 100);
                     
                     annualArbitrageSavings = acArbitrageSavings + currentArbitrageSavings;
                     
                 } else {
-                    // Original generic calculation
                     const peakDemandReduction = Math.min(actualSystemOutput, actualSystemOutput);
                     const monthlyDemandSavings = peakDemandReduction * demandCharge;
                     annualDemandSavings = monthlyDemandSavings * 12;
@@ -226,7 +155,6 @@
                     annualArbitrageSavings = dailyEnergyShifted * energyArbitrage * cyclingDaysPerYear;
                 }
                 
-                // Solar savings (unchanged)
                 let annualSolarSavings = 0;
                 
                 if (includeSolar) {
@@ -245,24 +173,20 @@
                     annualSolarSavings = solarChargingSavings + excessSolarValue;
                 }
                 
-                // Total energy savings
                 const totalEnergySavings = annualDemandSavings + annualArbitrageSavings + annualSolarSavings;
                 const annualTaxSavings = totalEnergySavings * (utilityTaxRate / 100);
                 
-                // Apply automation efficiency
                 const efficiencyMultiplier = includeSmartPanel ? (automationEfficiency / 100) : 0.70;
                 const adjustedEnergySavings = totalEnergySavings * efficiencyMultiplier;
                 const adjustedTaxSavings = annualTaxSavings * efficiencyMultiplier;
                 const totalAnnualSavings = adjustedEnergySavings + adjustedTaxSavings;
                 
-                // ROI calculations
                 const paybackYears = totalSystemCost / totalAnnualSavings;
                 const roi10Year = ((totalAnnualSavings * 10 - totalSystemCost) / totalSystemCost) * 100;
                 const monthlyNetProfit = totalAnnualSavings / 12;
                 const annualizedReturn = (Math.pow(1 + (roi10Year / 100), 0.1) - 1) * 100;
                 
-                // System capability analysis
-                const effectiveEnergyPerBattery = 6.1 * 0.9 * 0.85; // 90% usable * 85% efficiency
+                const effectiveEnergyPerBattery = 6.1 * 0.9 * 0.85;
                 const totalEffectiveEnergy = actualBatteryCount * effectiveEnergyPerBattery;
                 const acRuntimeCapability = totalEffectiveEnergy / unrestrictedPeakDemand;
                 const acPlusHouseholdRuntime = totalEffectiveEnergy / (unrestrictedPeakDemand + 1.5);
@@ -337,17 +261,17 @@
                                             onChange={(e) => {
                                                 const price = Number(e.target.value);
                                                 setPurchasePrice(price);
-                                                // Only auto-set battery count for presets, don't override manual inputs
-                                                if (price === 4400 && batteryCount !== 1 && batteryCount !== 3) {
-                                                    setBatteryCount(3); // Default to 3 for $4400
-                                                } else if (price === 11099) {
-                                                    setBatteryCount(4);
-                                                }
+                                                if (price === 4400) setBatteryCount(1);
+                                                else if (price === 6699) setBatteryCount(2);
+                                                else if (price === 8999) setBatteryCount(3);
+                                                else if (price === 11299) setBatteryCount(4);
                                             }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
-                                            <option value={4400}>$4,400 (1 or 3 batteries)</option>
-                                            <option value={11099}>$11,099 (4 batteries)</option>
+                                            <option value={4400}>$4,400 (1 battery + inverter)</option>
+                                            <option value={6699}>$6,699 (2 batteries)</option>
+                                            <option value={8999}>$8,999 (3 batteries)</option>
+                                            <option value={11299}>$11,299 (4 batteries)</option>
                                             <option value={0}>Custom Price</option>
                                         </select>
                                         {purchasePrice === 0 && (
@@ -377,10 +301,13 @@
                                             value={batteryCount}
                                             onChange={(e) => setBatteryCount(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {purchasePrice === 4400 ? 'For $4,400: Choose 1 or 3 batteries' : 
-                                             purchasePrice === 11099 ? 'Fixed at 4 batteries for this price' : 
+                                            {purchasePrice === 4400 ? '$4,400 = 1 battery + inverter' : 
+                                             purchasePrice === 6699 ? '$6,699 = 2 batteries' :
+                                             purchasePrice === 8999 ? '$8,999 = 3 batteries' :
+                                             purchasePrice === 11299 ? '$11,299 = 4 batteries' : 
                                              'Each battery: 6.1 kWh, 7.2 kW output'}
                                         </p>
                                     </div>
@@ -392,10 +319,10 @@
                                             value={systemCapacity}
                                             onChange={(e) => setSystemCapacity(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={purchasePrice === 4400 || purchasePrice === 11099}
+                                            disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {(purchasePrice === 4400 || purchasePrice === 11099) ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
+                                            {[4400, 6699, 8999, 11299].includes(purchasePrice) ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
                                         </p>
                                     </div>
                                     <div>
@@ -406,10 +333,10 @@
                                             value={systemOutput}
                                             onChange={(e) => setSystemOutput(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={purchasePrice === 4400 || purchasePrice === 11099}
+                                            disabled={[4400, 6699, 8999, 11299].includes(purchasePrice)}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {(purchasePrice === 4400 || purchasePrice === 11099) ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
+                                            {[4400, 6699, 8999, 11299].includes(purchasePrice) ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
                                         </p>
                                     </div>
                                 </div>
@@ -727,8 +654,55 @@
                                         <div className="text-sm text-yellow-600 font-medium">Annualized Return</div>
                                         <div className="text-2xl font-bold text-yellow-800">{formatPercent(results.annualizedReturn || 0)}</div>
                                     </div>
+                                    {results.actualBatteryCount && (
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <div className="text-sm text-gray-600 font-medium">System Configuration</div>
+                                            <div className="text-lg font-bold text-gray-800">{results.actualBatteryCount} Batteries</div>
+                                            <div className="text-xs text-gray-500">
+                                                {(results.actualSystemCapacity || 0).toFixed(1)} kWh, {(results.actualSystemOutput || 0).toFixed(1)} kW
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+
+                            {useRealisticCalculation && results.actualBatteryCount && (
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">AC Capability Analysis</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Can Handle 5-ton AC:</span>
+                                            <span className={`font-medium ${results.canHandleAC ? 'text-green-600' : 'text-red-600'}`}>
+                                                {results.canHandleAC ? 'YES' : 'NO'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">AC-Only Runtime:</span>
+                                            <span className="font-medium">{(results.acRuntimeCapability || 0).toFixed(1)} hours</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">AC + Household Runtime:</span>
+                                            <span className="font-medium">{(results.acPlusHouseholdRuntime || 0).toFixed(1)} hours</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Target Runtime (1.5h):</span>
+                                            <span className={`font-medium ${(results.acPlusHouseholdRuntime || 0) >= 1.5 ? 'text-green-600' : 'text-yellow-600'}`}>
+                                                {(results.acPlusHouseholdRuntime || 0) >= 1.5 ? '✅ MEETS TARGET' : '⚠️ BELOW TARGET'}
+                                            </span>
+                                        </div>
+                                        {results.actualBatteryCount === 3 && (results.acPlusHouseholdRuntime || 0) < 1.5 && (
+                                            <div className="mt-3 p-3 bg-yellow-50 rounded text-sm text-yellow-700">
+                                                💡 Consider smart AC cycling or adding 4th battery for full 1.5h runtime
+                                            </div>
+                                        )}
+                                        {results.actualBatteryCount === 1 && !results.canHandleAC && (
+                                            <div className="mt-3 p-3 bg-red-50 rounded text-sm text-red-700">
+                                                ❌ Single battery cannot run 5-ton AC. Consider 3-battery option.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="bg-white rounded-xl shadow-lg p-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Cost Breakdown</h3>
@@ -827,7 +801,7 @@
                         <div className="text-sm text-gray-600 space-y-2">
                             <p>• Federal tax credit of 30% expires December 31, 2025</p>
                             <p>• Realistic mode accounts for current restricted usage vs unrestricted AC usage</p>
-                            <p>• Pricing: $4,400 gets either 1 or 3 batteries, $11,099 gets 4 batteries</p>
+                            <p>• Pricing: $4,400 (1 battery), $6,699 (2), $8,999 (3), $11,299 (4 batteries)</p>
                             <p>• AC analysis assumes 5-ton unit (10.3 kW) with 1.5-hour target runtime</p>
                             <p>• Smart Home Panel 2 required for automatic switching - manual switching assumes 70% efficiency</p>
                             <p>• Seasonal calculations differentiate AC season vs off-season usage patterns</p>
