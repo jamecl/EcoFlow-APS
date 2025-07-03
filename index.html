@@ -29,7 +29,7 @@
         const EcoFlowROICalculator = () => {
             // System specifications
             const [purchasePrice, setPurchasePrice] = useState(4400);
-            const [isCustomPrice, setIsCustomPrice] = useState(false);
+            const [showCustomInput, setShowCustomInput] = useState(false);
             const [federalTaxCredit, setFederalTaxCredit] = useState(30);
             const [systemCapacity, setSystemCapacity] = useState(6.1);
             const [systemOutput, setSystemOutput] = useState(7.2);
@@ -74,25 +74,26 @@
             
             useEffect(() => {
                 // Update capacity and output when purchase price changes (only for presets)
-                if (purchasePrice === 4400) {
-                    setBatteryCount(1);
-                    setSystemCapacity(6.1);
-                    setSystemOutput(7.2);
-                } else if (purchasePrice === 6699) {
-                    setBatteryCount(2);
-                    setSystemCapacity(12.2);
-                    setSystemOutput(14.4);
-                } else if (purchasePrice === 8999) {
-                    setBatteryCount(3);
-                    setSystemCapacity(18.3);
-                    setSystemOutput(21.6);
-                } else if (purchasePrice === 11299) {
-                    setBatteryCount(4);
-                    setSystemCapacity(24.4);
-                    setSystemOutput(28.8);
+                if (!showCustomInput) {
+                    if (purchasePrice === 4400) {
+                        setBatteryCount(1);
+                        setSystemCapacity(6.1);
+                        setSystemOutput(7.2);
+                    } else if (purchasePrice === 6699) {
+                        setBatteryCount(2);
+                        setSystemCapacity(12.2);
+                        setSystemOutput(14.4);
+                    } else if (purchasePrice === 8999) {
+                        setBatteryCount(3);
+                        setSystemCapacity(18.3);
+                        setSystemOutput(21.6);
+                    } else if (purchasePrice === 11299) {
+                        setBatteryCount(4);
+                        setSystemCapacity(24.4);
+                        setSystemOutput(28.8);
+                    }
                 }
-                // Don't change anything for custom prices (purchasePrice === 0 or other values)
-            }, [purchasePrice]);
+            }, [purchasePrice, showCustomInput]);
             
             useEffect(() => {
                 calculateROI();
@@ -280,33 +281,14 @@
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Purchase Price ($)</label>
                                         <select
-                                            value={isCustomPrice ? 'custom' : purchasePrice}
+                                            value={showCustomInput ? 'custom' : purchasePrice}
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 if (value === 'custom') {
-                                                    setIsCustomPrice(true);
-                                                    setPurchasePrice(0);
+                                                    setShowCustomInput(true);
                                                 } else {
-                                                    setIsCustomPrice(false);
-                                                    const price = Number(value);
-                                                    setPurchasePrice(price);
-                                                    if (price === 4400) {
-                                                        setBatteryCount(1);
-                                                        setSystemCapacity(6.1);
-                                                        setSystemOutput(7.2);
-                                                    } else if (price === 6699) {
-                                                        setBatteryCount(2);
-                                                        setSystemCapacity(12.2);
-                                                        setSystemOutput(14.4);
-                                                    } else if (price === 8999) {
-                                                        setBatteryCount(3);
-                                                        setSystemCapacity(18.3);
-                                                        setSystemOutput(21.6);
-                                                    } else if (price === 11299) {
-                                                        setBatteryCount(4);
-                                                        setSystemCapacity(24.4);
-                                                        setSystemOutput(28.8);
-                                                    }
+                                                    setShowCustomInput(false);
+                                                    setPurchasePrice(Number(value));
                                                 }
                                             }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -317,12 +299,18 @@
                                             <option value={11299}>$11,299 (4 batteries)</option>
                                             <option value="custom">Custom Price</option>
                                         </select>
-                                        {isCustomPrice && (
+                                        {showCustomInput && (
                                             <input
                                                 type="number"
                                                 placeholder="Enter custom price"
-                                                onChange={(e) => setPurchasePrice(Number(e.target.value))}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (value && !isNaN(value)) {
+                                                        setPurchasePrice(Number(value));
+                                                    }
+                                                }}
                                                 className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                autoFocus
                                             />
                                         )}
                                     </div>
@@ -344,10 +332,10 @@
                                             value={batteryCount}
                                             onChange={(e) => setBatteryCount(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={!isCustomPrice && [4400, 6699, 8999, 11299].includes(purchasePrice)}
+                                            disabled={!showCustomInput}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {!isCustomPrice ? 
+                                            {!showCustomInput ? 
                                              (purchasePrice === 4400 ? '$4,400 = 1 battery + inverter' : 
                                               purchasePrice === 6699 ? '$6,699 = 2 batteries' :
                                               purchasePrice === 8999 ? '$8,999 = 3 batteries' :
@@ -363,10 +351,10 @@
                                             value={systemCapacity}
                                             onChange={(e) => setSystemCapacity(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={!isCustomPrice && [4400, 6699, 8999, 11299].includes(purchasePrice)}
+                                            disabled={!showCustomInput}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {!isCustomPrice ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
+                                            {!showCustomInput ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
                                         </p>
                                     </div>
                                     <div>
@@ -377,7 +365,7 @@
                                             value={systemOutput}
                                             onChange={(e) => setSystemOutput(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            disabled={!isCustomPrice && [4400, 6699, 8999, 11299].includes(purchasePrice)}
+                                            disabled={!showCustomInput}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
                                             {!isCustomPrice ? 'Auto-calculated from battery count' : 'Manual override for custom pricing'}
