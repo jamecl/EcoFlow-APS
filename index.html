@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoFlow Test</title>
+    <title>EcoFlow Delta Pro Ultra ROI Calculator</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -13,16 +13,453 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const TestComponent = () => {
+        const { useState, useEffect } = React;
+
+        const EcoFlowROICalculator = () => {
+            const [purchasePrice, setPurchasePrice] = useState(4400);
+            const [showCustomInput, setShowCustomInput] = useState(false);
+            const [federalTaxCredit, setFederalTaxCredit] = useState(30);
+            const [systemCapacity, setSystemCapacity] = useState(6.1);
+            const [systemOutput, setSystemOutput] = useState(7.2);
+            const [batteryCount, setBatteryCount] = useState(1);
+            
+            const [offPeakRate, setOffPeakRate] = useState(5.943);
+            const [onPeakRate, setOnPeakRate] = useState(14.227);
+            const [demandCharge, setDemandCharge] = useState(19.585);
+            const [utilityTaxRate, setUtilityTaxRate] = useState(8.1);
+            
+            const [currentPeakDemand, setCurrentPeakDemand] = useState(5.0);
+            const [unrestrictedPeakDemand, setUnrestrictedPeakDemand] = useState(10.3);
+            const [acSeasonMonths, setAcSeasonMonths] = useState(6);
+            const [acRuntimeHours, setAcRuntimeHours] = useState(1.5);
+            const [useRealisticCalculation, setUseRealisticCalculation] = useState(true);
+            
+            const [results, setResults] = useState({});
+            
+            useEffect(() => {
+                if (!showCustomInput) {
+                    if (purchasePrice === 4400) {
+                        setBatteryCount(1);
+                        setSystemCapacity(6.1);
+                        setSystemOutput(7.2);
+                    } else if (purchasePrice === 6699) {
+                        setBatteryCount(2);
+                        setSystemCapacity(12.2);
+                        setSystemOutput(14.4);
+                    } else if (purchasePrice === 8999) {
+                        setBatteryCount(3);
+                        setSystemCapacity(18.3);
+                        setSystemOutput(21.6);
+                    } else if (purchasePrice === 11299) {
+                        setBatteryCount(4);
+                        setSystemCapacity(24.4);
+                        setSystemOutput(28.8);
+                    }
+                }
+            }, [purchasePrice, showCustomInput]);
+            
+            useEffect(() => {
+                calculateROI();
+            }, [purchasePrice, federalTaxCredit, systemCapacity, systemOutput, batteryCount, 
+                offPeakRate, onPeakRate, demandCharge, utilityTaxRate, currentPeakDemand, 
+                unrestrictedPeakDemand, acSeasonMonths, acRuntimeHours, useRealisticCalculation]);
+            
+            const calculateROI = () => {
+                const systemCostAfterCredit = purchasePrice * (1 - federalTaxCredit / 100);
+                const totalSystemCost = systemCostAfterCredit;
+                
+                let actualBatteryCount, actualSystemCapacity, actualSystemOutput;
+                
+                if (purchasePrice === 4400) {
+                    actualBatteryCount = 1;
+                    actualSystemCapacity = 6.1;
+                    actualSystemOutput = 7.2;
+                } else if (purchasePrice === 6699) {
+                    actualBatteryCount = 2;
+                    actualSystemCapacity = 12.2;
+                    actualSystemOutput = 14.4;
+                } else if (purchasePrice === 8999) {
+                    actualBatteryCount = 3;
+                    actualSystemCapacity = 18.3;
+                    actualSystemOutput = 21.6;
+                } else if (purchasePrice === 11299) {
+                    actualBatteryCount = 4;
+                    actualSystemCapacity = 24.4;
+                    actualSystemOutput = 28.8;
+                } else {
+                    actualBatteryCount = batteryCount;
+                    actualSystemCapacity = systemCapacity;
+                    actualSystemOutput = systemOutput;
+                }
+                
+                let annualDemandSavings, annualArbitrageSavings;
+                
+                if (useRealisticCalculation) {
+                    const totalBatteryOutput = actualSystemOutput;
+                    
+                    const acSeasonDemandReduction = Math.min(totalBatteryOutput, unrestrictedPeakDemand);
+                    const acSeasonMonthlySavings = acSeasonDemandReduction * demandCharge;
+                    const acSeasonAnnualSavings = acSeasonMonthlySavings * acSeasonMonths;
+                    
+                    const offSeasonMonths = 12 - acSeasonMonths;
+                    const offSeasonDemandReduction = Math.min(totalBatteryOutput, currentPeakDemand);
+                    const offSeasonMonthlySavings = offSeasonDemandReduction * demandCharge;
+                    const offSeasonAnnualSavings = offSeasonMonthlySavings * offSeasonMonths;
+                    
+                    annualDemandSavings = acSeasonAnnualSavings + offSeasonAnnualSavings;
+                    
+                    const acEnergyPerDay = unrestrictedPeakDemand * acRuntimeHours;
+                    const acDaysPerSeason = acSeasonMonths * 30;
+                    const acEnergyPerSeason = acEnergyPerDay * acDaysPerSeason;
+                    const acArbitrageSavings = acEnergyPerSeason * ((onPeakRate - offPeakRate) / 100);
+                    
+                    const currentPeakUsage = 1614;
+                    const currentArbitrageSavings = currentPeakUsage * ((onPeakRate - offPeakRate) / 100);
+                    
+                    annualArbitrageSavings = acArbitrageSavings + currentArbitrageSavings;
+                } else {
+                    const monthlyDemandSavings = actualSystemOutput * demandCharge;
+                    annualDemandSavings = monthlyDemandSavings * 12;
+                    annualArbitrageSavings = 1000; // Simplified
+                }
+                
+                const totalEnergySavings = annualDemandSavings + annualArbitrageSavings;
+                const annualTaxSavings = totalEnergySavings * (utilityTaxRate / 100);
+                
+                const efficiencyMultiplier = 0.70; // Manual switching
+                const adjustedEnergySavings = totalEnergySavings * efficiencyMultiplier;
+                const adjustedTaxSavings = annualTaxSavings * efficiencyMultiplier;
+                const totalAnnualSavings = adjustedEnergySavings + adjustedTaxSavings;
+                
+                const paybackYears = totalSystemCost / totalAnnualSavings;
+                const roi10Year = ((totalAnnualSavings * 10 - totalSystemCost) / totalSystemCost) * 100;
+                const monthlyNetProfit = totalAnnualSavings / 12;
+                const annualizedReturn = (Math.pow(1 + (roi10Year / 100), 0.1) - 1) * 100;
+                
+                const effectiveEnergyPerBattery = 6.1 * 0.9 * 0.85;
+                const totalEffectiveEnergy = actualBatteryCount * effectiveEnergyPerBattery;
+                const acRuntimeCapability = totalEffectiveEnergy / unrestrictedPeakDemand;
+                const acPlusHouseholdRuntime = totalEffectiveEnergy / (unrestrictedPeakDemand + 1.5);
+                
+                const acEnergyShifted = useRealisticCalculation ? 
+                    (unrestrictedPeakDemand * acRuntimeHours * acSeasonMonths * 30) : 0;
+                
+                setResults({
+                    totalSystemCost,
+                    annualDemandSavings,
+                    annualArbitrageSavings,
+                    adjustedEnergySavings,
+                    adjustedTaxSavings,
+                    totalAnnualSavings,
+                    paybackYears,
+                    roi10Year,
+                    monthlyNetProfit,
+                    annualizedReturn,
+                    totalSavings10Year: totalAnnualSavings * 10,
+                    netProfit10Year: totalAnnualSavings * 10 - totalSystemCost,
+                    federalTaxSavings: purchasePrice * (federalTaxCredit / 100),
+                    actualBatteryCount,
+                    actualSystemCapacity,
+                    actualSystemOutput,
+                    acRuntimeCapability,
+                    acPlusHouseholdRuntime,
+                    canHandleAC: actualSystemOutput >= unrestrictedPeakDemand,
+                    acEnergyShifted
+                });
+            };
+            
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value || 0);
+            };
+            
+            const formatPercent = (value) => {
+                return `${(value || 0).toFixed(1)}%`;
+            };
+
             return (
-                <div className="p-4">
-                    <h1 className="text-2xl font-bold">EcoFlow Calculator Test</h1>
-                    <p>If you can see this, React is working!</p>
+                <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-800">🧮 EcoFlow Delta Pro Ultra ROI Calculator</h1>
+                        <p className="text-gray-600 max-w-2xl mx-auto mt-4">
+                            Interactive calculator for analyzing the return on investment for your EcoFlow Delta Pro Ultra system with APS Phoenix rates
+                        </p>
+                    </div>
+
+                    <div className="grid lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">⚡ System Configuration</h2>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Purchase Price ($)</label>
+                                        <select
+                                            value={showCustomInput ? 'custom' : purchasePrice}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === 'custom') {
+                                                    setShowCustomInput(true);
+                                                } else {
+                                                    setShowCustomInput(false);
+                                                    setPurchasePrice(Number(value));
+                                                }
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value={4400}>$4,400 (1 battery + inverter)</option>
+                                            <option value={6699}>$6,699 (2 batteries)</option>
+                                            <option value={8999}>$8,999 (3 batteries)</option>
+                                            <option value={11299}>$11,299 (4 batteries)</option>
+                                            <option value="custom">Custom Price</option>
+                                        </select>
+                                        {showCustomInput && (
+                                            <input
+                                                type="number"
+                                                placeholder="Enter custom price"
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (value && !isNaN(value)) {
+                                                        setPurchasePrice(Number(value));
+                                                    }
+                                                }}
+                                                className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                autoFocus
+                                            />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Federal Tax Credit (%)</label>
+                                        <input
+                                            type="number"
+                                            value={federalTaxCredit}
+                                            onChange={(e) => setFederalTaxCredit(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Battery Count</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="15"
+                                            value={batteryCount}
+                                            onChange={(e) => setBatteryCount(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            disabled={!showCustomInput}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Total System Capacity (kWh)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={systemCapacity}
+                                            onChange={(e) => setSystemCapacity(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            disabled={!showCustomInput}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">💰 APS Rate Structure</h2>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Off-Peak Rate (¢/kWh)</label>
+                                        <input
+                                            type="number"
+                                            step="0.001"
+                                            value={offPeakRate}
+                                            onChange={(e) => setOffPeakRate(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">On-Peak Rate (¢/kWh)</label>
+                                        <input
+                                            type="number"
+                                            step="0.001"
+                                            value={onPeakRate}
+                                            onChange={(e) => setOnPeakRate(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Demand Charge ($/kW/month)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={demandCharge}
+                                            onChange={(e) => setDemandCharge(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Utility Tax Rate (%)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={utilityTaxRate}
+                                            onChange={(e) => setUtilityTaxRate(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">📅 Usage Patterns</h2>
+                                <div className="mb-4">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={useRealisticCalculation}
+                                            onChange={(e) => setUseRealisticCalculation(e.target.checked)}
+                                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">Use Realistic Usage-Based Calculation</span>
+                                    </label>
+                                </div>
+                                
+                                {useRealisticCalculation && (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Peak Demand (kW)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={currentPeakDemand}
+                                                onChange={(e) => setCurrentPeakDemand(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Unrestricted Peak Demand (kW)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={unrestrictedPeakDemand}
+                                                onChange={(e) => setUnrestrictedPeakDemand(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">AC Season (months)</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="12"
+                                                value={acSeasonMonths}
+                                                onChange={(e) => setAcSeasonMonths(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">AC Runtime During Peak (hours)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                min="0"
+                                                max="3"
+                                                value={acRuntimeHours}
+                                                onChange={(e) => setAcRuntimeHours(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Hours AC would run during 4-7pm period</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">📈 Key Results</h2>
+                                <div className="space-y-4">
+                                    <div className="bg-green-50 rounded-lg p-4">
+                                        <div className="text-sm text-green-600 font-medium">Payback Period</div>
+                                        <div className="text-2xl font-bold text-green-800">{(results.paybackYears || 0).toFixed(1)} years</div>
+                                    </div>
+                                    <div className="bg-blue-50 rounded-lg p-4">
+                                        <div className="text-sm text-blue-600 font-medium">Monthly Savings</div>
+                                        <div className="text-2xl font-bold text-blue-800">{formatCurrency(results.monthlyNetProfit || 0)}</div>
+                                    </div>
+                                    <div className="bg-purple-50 rounded-lg p-4">
+                                        <div className="text-sm text-purple-600 font-medium">10-Year ROI</div>
+                                        <div className="text-2xl font-bold text-purple-800">{formatPercent(results.roi10Year || 0)}</div>
+                                    </div>
+                                    <div className="bg-orange-50 rounded-lg p-4">
+                                        <div className="text-sm text-orange-600 font-medium">AC Energy Shifted</div>
+                                        <div className="text-lg font-bold text-orange-800">
+                                            {useRealisticCalculation ? 
+                                                `${(results.acEnergyShifted || 0).toFixed(0)} kWh/year` :
+                                                'Generic calculation'
+                                            }
+                                        </div>
+                                        <div className="text-xs text-orange-500">
+                                            {useRealisticCalculation ? `${acRuntimeHours}h × ${unrestrictedPeakDemand}kW × ${acSeasonMonths * 30} days` : ''}
+                                        </div>
+                                    </div>
+                                    {results.actualBatteryCount && (
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <div className="text-sm text-gray-600 font-medium">System Configuration</div>
+                                            <div className="text-lg font-bold text-gray-800">{results.actualBatteryCount} Batteries</div>
+                                            <div className="text-xs text-gray-500">
+                                                {(results.actualSystemCapacity || 0).toFixed(1)} kWh, {(results.actualSystemOutput || 0).toFixed(1)} kW
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Annual Savings</h3>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Demand Charges:</span>
+                                        <span className="font-medium">{formatCurrency(results.annualDemandSavings || 0)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Energy Arbitrage:</span>
+                                        <span className="font-medium">{formatCurrency(results.annualArbitrageSavings || 0)}</span>
+                                    </div>
+                                    <div className="border-t pt-2 flex justify-between font-semibold">
+                                        <span>Total Annual:</span>
+                                        <span>{formatCurrency(results.totalAnnualSavings || 0)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">10-Year Projection</h3>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Total Savings:</span>
+                                        <span className="font-medium">{formatCurrency(results.totalSavings10Year || 0)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">System Cost:</span>
+                                        <span className="font-medium">-{formatCurrency(results.totalSystemCost || 0)}</span>
+                                    </div>
+                                    <div className="border-t pt-2 flex justify-between font-semibold text-green-600">
+                                        <span>Net Profit:</span>
+                                        <span>{formatCurrency(results.netProfit10Year || 0)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         };
 
-        ReactDOM.render(<TestComponent />, document.getElementById('root'));
+        ReactDOM.render(<EcoFlowROICalculator />, document.getElementById('root'));
     </script>
 </body>
 </html>
