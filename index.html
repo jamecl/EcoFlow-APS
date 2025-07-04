@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoFlow ROI Calculator</title>
+    <title>EcoFlow Delta Pro Ultra ROI Calculator</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -14,106 +14,141 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const Calculator = () => {
-            const [price, setPrice] = useState(4400);
-            const [showCustom, setShowCustom] = useState(false);
-            const [taxCredit, setTaxCredit] = useState(30);
-            const [capacity, setCapacity] = useState(6.1);
-            const [output, setOutput] = useState(7.2);
-            const [batteries, setBatteries] = useState(1);
-            const [offPeak, setOffPeak] = useState(5.943);
-            const [onPeak, setOnPeak] = useState(14.227);
-            const [demand, setDemand] = useState(19.585);
-            const [tax, setTax] = useState(8.1);
-            const [currentPeak, setCurrentPeak] = useState(5.0);
-            const [unrestrictedPeak, setUnrestrictedPeak] = useState(10.3);
-            const [acSeason, setAcSeason] = useState(6);
-            const [acHours, setAcHours] = useState(1.5);
-            const [realistic, setRealistic] = useState(true);
-            const [smartPanel, setSmartPanel] = useState(false);
-            const [panelCost, setPanelCost] = useState(4000);
-            const [efficiency, setEfficiency] = useState(95);
-            const [solar, setSolar] = useState(false);
+        const EcoFlowROICalculator = () => {
+            const [purchasePrice, setPurchasePrice] = useState(4400);
+            const [showCustomInput, setShowCustomInput] = useState(false);
+            const [federalTaxCredit, setFederalTaxCredit] = useState(30);
+            const [systemCapacity, setSystemCapacity] = useState(6.1);
+            const [systemOutput, setSystemOutput] = useState(7.2);
+            const [batteryCount, setBatteryCount] = useState(1);
+            const [offPeakRate, setOffPeakRate] = useState(5.943);
+            const [onPeakRate, setOnPeakRate] = useState(14.227);
+            const [demandCharge, setDemandCharge] = useState(19.585);
+            const [utilityTaxRate, setUtilityTaxRate] = useState(8.1);
+            const [dailyCycling, setDailyCycling] = useState(90);
+            const [peakSeasonMonths, setPeakSeasonMonths] = useState(6);
+            const [cyclingDaysPerWeek, setCyclingDaysPerWeek] = useState(5);
+            const [currentPeakDemand, setCurrentPeakDemand] = useState(5.0);
+            const [unrestrictedPeakDemand, setUnrestrictedPeakDemand] = useState(10.3);
+            const [acSeasonMonths, setAcSeasonMonths] = useState(6);
+            const [acRuntimeHours, setAcRuntimeHours] = useState(1.5);
+            const [useRealisticCalculation, setUseRealisticCalculation] = useState(true);
+            const [includeSolar, setIncludeSolar] = useState(false);
             const [solarPanels, setSolarPanels] = useState(2);
+            const [panelWattage, setPanelWattage] = useState(400);
+            const [sunHours, setSunHours] = useState(8);
+            const [solarCostPerPanel, setSolarCostPerPanel] = useState(150);
+            const [solarInstallCost, setSolarInstallCost] = useState(300);
+            const [includeSmartPanel, setIncludeSmartPanel] = useState(false);
+            const [smartPanelCost, setSmartPanelCost] = useState(4000);
+            const [professionalInstallCost, setProfessionalInstallCost] = useState(1500);
+            const [permitsCost, setPermitsCost] = useState(300);
+            const [miscHardwareCost, setMiscHardwareCost] = useState(200);
+            const [automationEfficiency, setAutomationEfficiency] = useState(95);
             const [results, setResults] = useState({});
             
             useEffect(() => {
-                if (!showCustom) {
-                    if (price === 4400) { setBatteries(1); setCapacity(6.1); setOutput(7.2); }
-                    else if (price === 6699) { setBatteries(2); setCapacity(12.2); setOutput(14.4); }
-                    else if (price === 8999) { setBatteries(3); setCapacity(18.3); setOutput(21.6); }
-                    else if (price === 11299) { setBatteries(4); setCapacity(24.4); setOutput(28.8); }
+                if (!showCustomInput) {
+                    if (purchasePrice === 4400) { setBatteryCount(1); setSystemCapacity(6.1); setSystemOutput(7.2); }
+                    else if (purchasePrice === 6699) { setBatteryCount(2); setSystemCapacity(12.2); setSystemOutput(14.4); }
+                    else if (purchasePrice === 8999) { setBatteryCount(3); setSystemCapacity(18.3); setSystemOutput(21.6); }
+                    else if (purchasePrice === 11299) { setBatteryCount(4); setSystemCapacity(24.4); setSystemOutput(28.8); }
                 }
-            }, [price, showCustom]);
+            }, [purchasePrice, showCustomInput]);
             
-            useEffect(() => { calculate(); }, [price, taxCredit, capacity, output, batteries, offPeak, onPeak, demand, tax, currentPeak, unrestrictedPeak, acSeason, acHours, realistic, smartPanel, panelCost, efficiency, solar, solarPanels]);
-            
-            const calculate = () => {
-                const systemCost = price * (1 - taxCredit / 100);
-                const smartCost = smartPanel ? panelCost * (1 - taxCredit / 100) : 0;
-                const solarCost = solar ? solarPanels * 150 * (1 - taxCredit / 100) : 0;
-                const totalCost = systemCost + smartCost + solarCost;
+            useEffect(() => {
+                const systemCostAfterCredit = purchasePrice * (1 - federalTaxCredit / 100);
+                const totalSolarCost = includeSolar ? (solarPanels * solarCostPerPanel + solarInstallCost) : 0;
+                const solarCostAfterCredit = totalSolarCost * (1 - federalTaxCredit / 100);
+                const totalSmartPanelCost = includeSmartPanel ? (smartPanelCost + professionalInstallCost + permitsCost + miscHardwareCost) : 0;
+                const smartPanelCostAfterCredit = totalSmartPanelCost * (1 - federalTaxCredit / 100);
+                const totalSystemCost = systemCostAfterCredit + solarCostAfterCredit + smartPanelCostAfterCredit;
                 
-                let actualBatteries, actualCapacity, actualOutput;
-                if (price === 4400) { actualBatteries = 1; actualCapacity = 6.1; actualOutput = 7.2; }
-                else if (price === 6699) { actualBatteries = 2; actualCapacity = 12.2; actualOutput = 14.4; }
-                else if (price === 8999) { actualBatteries = 3; actualCapacity = 18.3; actualOutput = 21.6; }
-                else if (price === 11299) { actualBatteries = 4; actualCapacity = 24.4; actualOutput = 28.8; }
-                else { actualBatteries = batteries; actualCapacity = capacity; actualOutput = output; }
+                let actualBatteryCount, actualSystemCapacity, actualSystemOutput;
+                if (purchasePrice === 4400) { actualBatteryCount = 1; actualSystemCapacity = 6.1; actualSystemOutput = 7.2; }
+                else if (purchasePrice === 6699) { actualBatteryCount = 2; actualSystemCapacity = 12.2; actualSystemOutput = 14.4; }
+                else if (purchasePrice === 8999) { actualBatteryCount = 3; actualSystemCapacity = 18.3; actualSystemOutput = 21.6; }
+                else if (purchasePrice === 11299) { actualBatteryCount = 4; actualSystemCapacity = 24.4; actualSystemOutput = 28.8; }
+                else { actualBatteryCount = batteryCount; actualSystemCapacity = systemCapacity; actualSystemOutput = systemOutput; }
                 
-                let demandSavings, arbitrageSavings;
-                if (realistic) {
-                    const acDemandReduction = Math.min(actualOutput, unrestrictedPeak);
-                    const acDemandSavings = acDemandReduction * demand * acSeason;
-                    const offDemandReduction = Math.min(actualOutput, currentPeak);
-                    const offDemandSavings = offDemandReduction * demand * (12 - acSeason);
-                    demandSavings = acDemandSavings + offDemandSavings;
-                    
-                    const acEnergy = unrestrictedPeak * acHours * acSeason * 30;
-                    const acArbitrage = acEnergy * ((onPeak - offPeak) / 100);
-                    const currentArbitrage = 1614 * ((onPeak - offPeak) / 100);
-                    arbitrageSavings = acArbitrage + currentArbitrage;
+                let annualDemandSavings, annualArbitrageSavings;
+                if (useRealisticCalculation) {
+                    const totalBatteryOutput = actualSystemOutput;
+                    const acSeasonDemandReduction = Math.min(totalBatteryOutput, unrestrictedPeakDemand);
+                    const acSeasonMonthlySavings = acSeasonDemandReduction * demandCharge;
+                    const acSeasonAnnualSavings = acSeasonMonthlySavings * acSeasonMonths;
+                    const offSeasonMonths = 12 - acSeasonMonths;
+                    const offSeasonDemandReduction = Math.min(totalBatteryOutput, currentPeakDemand);
+                    const offSeasonMonthlySavings = offSeasonDemandReduction * demandCharge;
+                    const offSeasonAnnualSavings = offSeasonMonthlySavings * offSeasonMonths;
+                    annualDemandSavings = acSeasonAnnualSavings + offSeasonAnnualSavings;
+                    const acEnergyPerDay = unrestrictedPeakDemand * acRuntimeHours;
+                    const acDaysPerSeason = acSeasonMonths * 30;
+                    const acEnergyPerSeason = acEnergyPerDay * acDaysPerSeason;
+                    const acArbitrageSavings = acEnergyPerSeason * ((onPeakRate - offPeakRate) / 100);
+                    const currentPeakUsage = 1614;
+                    const currentArbitrageSavings = currentPeakUsage * ((onPeakRate - offPeakRate) / 100);
+                    annualArbitrageSavings = acArbitrageSavings + currentArbitrageSavings;
                 } else {
-                    demandSavings = actualOutput * demand * 12;
-                    arbitrageSavings = 1000;
+                    const peakDemandReduction = Math.min(actualSystemOutput, actualSystemOutput);
+                    const monthlyDemandSavings = peakDemandReduction * demandCharge;
+                    annualDemandSavings = monthlyDemandSavings * 12;
+                    const energyArbitrage = (onPeakRate - offPeakRate) / 100;
+                    const dailyEnergyShifted = actualSystemCapacity * (dailyCycling / 100) * 0.85;
+                    const cyclingDaysPerYear = peakSeasonMonths * 30 * (cyclingDaysPerWeek / 7);
+                    annualArbitrageSavings = dailyEnergyShifted * energyArbitrage * cyclingDaysPerYear;
                 }
                 
-                const solarSavings = solar ? solarPanels * 400 * 8 * 0.85 * 365 * (onPeak / 100) / 1000 : 0;
-                const energySavings = demandSavings + arbitrageSavings + solarSavings;
-                const taxSavings = energySavings * (tax / 100);
+                let annualSolarSavings = 0;
+                if (includeSolar) {
+                    const totalSolarWatts = solarPanels * panelWattage;
+                    const dailySolarGeneration = (totalSolarWatts / 1000) * sunHours * 0.85;
+                    const annualSolarGeneration = dailySolarGeneration * 365;
+                    const annualBatteryCharging = actualSystemCapacity * (dailyCycling / 100) * 365;
+                    const gridChargingReduction = Math.min(annualSolarGeneration, annualBatteryCharging);
+                    const solarChargingSavings = gridChargingReduction * (offPeakRate / 100);
+                    const excessSolarGeneration = Math.max(0, annualSolarGeneration - annualBatteryCharging);
+                    const excessSolarValue = excessSolarGeneration * (onPeakRate / 100);
+                    annualSolarSavings = solarChargingSavings + excessSolarValue;
+                }
                 
-                const effMult = smartPanel ? (efficiency / 100) : 0.70;
-                const adjEnergy = energySavings * effMult;
-                const adjTax = taxSavings * effMult;
-                const totalAnnual = adjEnergy + adjTax;
-                
-                const payback = totalCost / totalAnnual;
-                const roi10 = ((totalAnnual * 10 - totalCost) / totalCost) * 100;
-                const monthly = totalAnnual / 12;
-                const annualized = (Math.pow(1 + (roi10 / 100), 0.1) - 1) * 100;
-                
-                const effectiveEnergy = actualBatteries * 6.1 * 0.9 * 0.85;
-                const acRuntime = effectiveEnergy / unrestrictedPeak;
-                const acPlusHouse = effectiveEnergy / (unrestrictedPeak + 1.5);
-                const acEnergyShifted = realistic ? (unrestrictedPeak * acHours * acSeason * 30) : 0;
+                const totalEnergySavings = annualDemandSavings + annualArbitrageSavings + annualSolarSavings;
+                const annualTaxSavings = totalEnergySavings * (utilityTaxRate / 100);
+                const efficiencyMultiplier = includeSmartPanel ? (automationEfficiency / 100) : 0.70;
+                const adjustedEnergySavings = totalEnergySavings * efficiencyMultiplier;
+                const adjustedTaxSavings = annualTaxSavings * efficiencyMultiplier;
+                const totalAnnualSavings = adjustedEnergySavings + adjustedTaxSavings;
+                const paybackYears = totalSystemCost / totalAnnualSavings;
+                const roi10Year = ((totalAnnualSavings * 10 - totalSystemCost) / totalSystemCost) * 100;
+                const monthlyNetProfit = totalAnnualSavings / 12;
+                const annualizedReturn = (Math.pow(1 + (roi10Year / 100), 0.1) - 1) * 100;
+                const effectiveEnergyPerBattery = 6.1 * 0.9 * 0.85;
+                const totalEffectiveEnergy = actualBatteryCount * effectiveEnergyPerBattery;
+                const acRuntimeCapability = totalEffectiveEnergy / unrestrictedPeakDemand;
+                const acPlusHouseholdRuntime = totalEffectiveEnergy / (unrestrictedPeakDemand + 1.5);
+                const acEnergyShifted = useRealisticCalculation ? (unrestrictedPeakDemand * acRuntimeHours * acSeasonMonths * 30) : 0;
                 
                 setResults({
-                    totalCost, demandSavings, arbitrageSavings, solarSavings, adjEnergy, adjTax, totalAnnual,
-                    payback, roi10, monthly, annualized, totalSavings10: totalAnnual * 10,
-                    netProfit10: totalAnnual * 10 - totalCost, fedSavings: price * (taxCredit / 100),
-                    effMult, actualBatteries, actualCapacity, actualOutput, acRuntime, acPlusHouse,
-                    canHandleAC: actualOutput >= unrestrictedPeak, acEnergyShifted, smartCost, solarCost
+                    systemCostAfterCredit, solarCostAfterCredit, smartPanelCostAfterCredit, totalSystemCost,
+                    annualDemandSavings, annualArbitrageSavings, annualSolarSavings, adjustedEnergySavings,
+                    adjustedTaxSavings, totalAnnualSavings, paybackYears, roi10Year, monthlyNetProfit,
+                    annualizedReturn, totalSavings10Year: totalAnnualSavings * 10,
+                    netProfit10Year: totalAnnualSavings * 10 - totalSystemCost,
+                    federalTaxSavings: purchasePrice * (federalTaxCredit / 100) + (totalSolarCost * (federalTaxCredit / 100)) + (totalSmartPanelCost * (federalTaxCredit / 100)),
+                    efficiencyMultiplier, useRealisticCalculation, actualBatteryCount, actualSystemCapacity,
+                    actualSystemOutput, acRuntimeCapability, acPlusHouseholdRuntime,
+                    canHandleAC: actualSystemOutput >= unrestrictedPeakDemand, acEnergyShifted
                 });
-            };
+            }, [purchasePrice, federalTaxCredit, systemCapacity, systemOutput, batteryCount, offPeakRate, onPeakRate, demandCharge, utilityTaxRate, dailyCycling, peakSeasonMonths, cyclingDaysPerWeek, includeSolar, solarPanels, panelWattage, sunHours, solarCostPerPanel, solarInstallCost, includeSmartPanel, smartPanelCost, professionalInstallCost, permitsCost, miscHardwareCost, automationEfficiency, currentPeakDemand, unrestrictedPeakDemand, acSeasonMonths, acRuntimeHours, useRealisticCalculation]);
             
             const fmt = (v) => new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0}).format(v || 0);
             const pct = (v) => `${(v || 0).toFixed(1)}%`;
 
             return (
-                <div className="max-w-7xl mx-auto p-4 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
-                    <div className="text-center mb-6">
+                <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
+                    <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-800">🧮 EcoFlow Delta Pro Ultra ROI Calculator</h1>
-                        <p className="text-gray-600">Interactive calculator for ROI analysis with APS Phoenix rates</p>
+                        <p className="text-gray-600 max-w-2xl mx-auto mt-4">Interactive calculator for analyzing ROI with APS Phoenix rates</p>
                     </div>
 
                     <div className="grid lg:grid-cols-3 gap-6">
@@ -124,153 +159,208 @@
                                 <div className="grid md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Purchase Price ($)</label>
-                                        <select value={showCustom ? 'custom' : price} onChange={(e) => {
-                                            if (e.target.value === 'custom') setShowCustom(true);
-                                            else { setShowCustom(false); setPrice(Number(e.target.value)); }
+                                        <select value={showCustomInput ? 'custom' : purchasePrice} onChange={(e) => {
+                                            if (e.target.value === 'custom') setShowCustomInput(true);
+                                            else { setShowCustomInput(false); setPurchasePrice(Number(e.target.value)); }
                                         }} className="w-full px-3 py-2 border rounded-lg">
-                                            <option value={4400}>$4,400 (1 battery)</option>
+                                            <option value={4400}>$4,400 (1 battery + inverter)</option>
                                             <option value={6699}>$6,699 (2 batteries)</option>
                                             <option value={8999}>$8,999 (3 batteries)</option>
                                             <option value={11299}>$11,299 (4 batteries)</option>
                                             <option value="custom">Custom Price</option>
                                         </select>
-                                        {showCustom && <input type="number" placeholder="Enter price" onChange={(e) => setPrice(Number(e.target.value))} className="w-full mt-2 px-3 py-2 border rounded-lg" />}
+                                        {showCustomInput && <input type="number" placeholder="Enter price" onChange={(e) => setPurchasePrice(Number(e.target.value))} className="w-full mt-2 px-3 py-2 border rounded-lg" />}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Tax Credit (%)</label>
-                                        <input type="number" value={taxCredit} onChange={(e) => setTaxCredit(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        <input type="number" value={federalTaxCredit} onChange={(e) => setFederalTaxCredit(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Battery Count</label>
-                                        <input type="number" min="1" max="15" value={batteries} onChange={(e) => setBatteries(Number(e.target.value))} disabled={!showCustom} className="w-full px-3 py-2 border rounded-lg" />
+                                        <input type="number" min="1" max="15" value={batteryCount} onChange={(e) => setBatteryCount(Number(e.target.value))} disabled={!showCustomInput} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Capacity (kWh)</label>
-                                        <input type="number" step="0.1" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} disabled={!showCustom} className="w-full px-3 py-2 border rounded-lg" />
+                                        <input type="number" step="0.1" value={systemCapacity} onChange={(e) => setSystemCapacity(Number(e.target.value))} disabled={!showCustomInput} className="w-full px-3 py-2 border rounded-lg" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Output (kW)</label>
+                                        <input type="number" step="0.1" value={systemOutput} onChange={(e) => setSystemOutput(Number(e.target.value))} disabled={!showCustomInput} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h2 className="text-xl font-semibold mb-4">💰 APS Rates</h2>
+                                <h2 className="text-xl font-semibold mb-4">💰 APS Rate Structure</h2>
                                 <div className="grid md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Off-Peak (¢/kWh)</label>
-                                        <input type="number" step="0.001" value={offPeak} onChange={(e) => setOffPeak(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        <label className="block text-sm font-medium mb-2">Off-Peak Rate (¢/kWh)</label>
+                                        <input type="number" step="0.001" value={offPeakRate} onChange={(e) => setOffPeakRate(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">On-Peak (¢/kWh)</label>
-                                        <input type="number" step="0.001" value={onPeak} onChange={(e) => setOnPeak(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        <label className="block text-sm font-medium mb-2">On-Peak Rate (¢/kWh)</label>
+                                        <input type="number" step="0.001" value={onPeakRate} onChange={(e) => setOnPeakRate(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Demand ($/kW/month)</label>
-                                        <input type="number" step="0.1" value={demand} onChange={(e) => setDemand(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        <label className="block text-sm font-medium mb-2">Demand Charge ($/kW/month)</label>
+                                        <input type="number" step="0.1" value={demandCharge} onChange={(e) => setDemandCharge(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Tax Rate (%)</label>
-                                        <input type="number" step="0.1" value={tax} onChange={(e) => setTax(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        <label className="block text-sm font-medium mb-2">Utility Tax Rate (%)</label>
+                                        <input type="number" step="0.1" value={utilityTaxRate} onChange={(e) => setUtilityTaxRate(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h2 className="text-xl font-semibold mb-4">📅 Usage</h2>
+                                <h2 className="text-xl font-semibold mb-4">📅 Usage Patterns</h2>
                                 <label className="flex items-center gap-2 mb-4">
-                                    <input type="checkbox" checked={realistic} onChange={(e) => setRealistic(e.target.checked)} className="w-4 h-4" />
-                                    <span className="text-sm font-medium">Realistic Calculation</span>
+                                    <input type="checkbox" checked={useRealisticCalculation} onChange={(e) => setUseRealisticCalculation(e.target.checked)} className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Use Realistic Usage-Based Calculation</span>
                                 </label>
-                                {realistic && (
+                                
+                                {useRealisticCalculation ? (
                                     <div className="grid md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">Current Peak (kW)</label>
-                                            <input type="number" step="0.1" value={currentPeak} onChange={(e) => setCurrentPeak(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                            <label className="block text-sm font-medium mb-2">Current Peak Demand (kW)</label>
+                                            <input type="number" step="0.1" value={currentPeakDemand} onChange={(e) => setCurrentPeakDemand(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">Unrestricted Peak (kW)</label>
-                                            <input type="number" step="0.1" value={unrestrictedPeak} onChange={(e) => setUnrestrictedPeak(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                            <label className="block text-sm font-medium mb-2">Unrestricted Peak Demand (kW)</label>
+                                            <input type="number" step="0.1" value={unrestrictedPeakDemand} onChange={(e) => setUnrestrictedPeakDemand(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium mb-2">AC Season (months)</label>
-                                            <input type="number" min="1" max="12" value={acSeason} onChange={(e) => setAcSeason(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                            <input type="number" min="1" max="12" value={acSeasonMonths} onChange={(e) => setAcSeasonMonths(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">AC Runtime (hours)</label>
-                                            <input type="number" step="0.1" min="0" max="3" value={acHours} onChange={(e) => setAcHours(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
-                                            <p className="text-xs text-gray-500 mt-1">Hours during 4-7pm period</p>
+                                            <label className="block text-sm font-medium mb-2">AC Runtime During Peak (hours)</label>
+                                            <input type="number" step="0.1" min="0" max="3" value={acRuntimeHours} onChange={(e) => setAcRuntimeHours(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                            <p className="text-xs text-gray-500 mt-1">Hours AC would run during 4-7pm period</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Daily Battery Usage (%)</label>
+                                            <input type="number" value={dailyCycling} onChange={(e) => setDailyCycling(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Peak Season (months)</label>
+                                            <input type="number" value={peakSeasonMonths} onChange={(e) => setPeakSeasonMonths(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Cycling Days/Week</label>
+                                            <input type="number" value={cyclingDaysPerWeek} onChange={(e) => setCyclingDaysPerWeek(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
                                         </div>
                                     </div>
                                 )}
                             </div>
 
                             <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h2 className="text-xl font-semibold mb-4">🏠 Add-ons</h2>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="flex items-center gap-2">
-                                            <input type="checkbox" checked={smartPanel} onChange={(e) => setSmartPanel(e.target.checked)} className="w-4 h-4" />
-                                            <span className="text-sm font-medium">Smart Home Panel ($4,000)</span>
-                                        </label>
-                                        {smartPanel && (
-                                            <div className="mt-2 grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium mb-1">Panel Cost ($)</label>
-                                                    <input type="number" value={panelCost} onChange={(e) => setPanelCost(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium mb-1">Efficiency (%)</label>
-                                                    <input type="number" min="50" max="100" value={efficiency} onChange={(e) => setEfficiency(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                                </div>
-                                            </div>
-                                        )}
+                                <h2 className="text-xl font-semibold mb-4">🏠 Smart Home Panel & Installation</h2>
+                                <label className="flex items-center gap-2 mb-4">
+                                    <input type="checkbox" checked={includeSmartPanel} onChange={(e) => setIncludeSmartPanel(e.target.checked)} className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Include Smart Home Panel 2 & Installation</span>
+                                </label>
+                                {includeSmartPanel && (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Smart Panel Cost ($)</label>
+                                            <input type="number" value={smartPanelCost} onChange={(e) => setSmartPanelCost(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Installation Cost ($)</label>
+                                            <input type="number" value={professionalInstallCost} onChange={(e) => setProfessionalInstallCost(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Permits & Fees ($)</label>
+                                            <input type="number" value={permitsCost} onChange={(e) => setPermitsCost(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Misc Hardware ($)</label>
+                                            <input type="number" value={miscHardwareCost} onChange={(e) => setMiscHardwareCost(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium mb-2">Automation Efficiency (%)</label>
+                                            <input type="number" min="50" max="100" value={automationEfficiency} onChange={(e) => setAutomationEfficiency(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                            <p className="text-xs text-gray-500 mt-1">95% with automation, ~70% manual switching</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="flex items-center gap-2">
-                                            <input type="checkbox" checked={solar} onChange={(e) => setSolar(e.target.checked)} className="w-4 h-4" />
-                                            <span className="text-sm font-medium">Solar Panels</span>
-                                        </label>
-                                        {solar && (
-                                            <div className="mt-2">
-                                                <label className="block text-sm font-medium mb-1">Panel Count</label>
-                                                <input type="number" value={solarPanels} onChange={(e) => setSolarPanels(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                            </div>
-                                        )}
+                                )}
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h2 className="text-xl font-semibold mb-4">☀️ Solar Enhancement</h2>
+                                <label className="flex items-center gap-2 mb-4">
+                                    <input type="checkbox" checked={includeSolar} onChange={(e) => setIncludeSolar(e.target.checked)} className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Include Solar Panels</span>
+                                </label>
+                                {includeSolar && (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Number of Panels</label>
+                                            <input type="number" value={solarPanels} onChange={(e) => setSolarPanels(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Panel Wattage (W)</label>
+                                            <input type="number" value={panelWattage} onChange={(e) => setPanelWattage(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Sun Hours/Day</label>
+                                            <input type="number" value={sunHours} onChange={(e) => setSunHours(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Cost per Panel ($)</label>
+                                            <input type="number" value={solarCostPerPanel} onChange={(e) => setSolarCostPerPanel(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium mb-2">Installation Cost ($)</label>
+                                            <input type="number" value={solarInstallCost} onChange={(e) => setSolarInstallCost(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="space-y-6">
                             <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h2 className="text-xl font-semibold mb-4">📈 Results</h2>
+                                <h2 className="text-xl font-semibold mb-4">📈 Key Results</h2>
                                 <div className="space-y-4">
                                     <div className="bg-green-50 rounded-lg p-4">
                                         <div className="text-sm text-green-600 font-medium">Payback Period</div>
-                                        <div className="text-2xl font-bold text-green-800">{(results.payback || 0).toFixed(1)} years</div>
+                                        <div className="text-2xl font-bold text-green-800">{(results.paybackYears || 0).toFixed(1)} years</div>
                                     </div>
                                     <div className="bg-blue-50 rounded-lg p-4">
                                         <div className="text-sm text-blue-600 font-medium">Monthly Savings</div>
-                                        <div className="text-2xl font-bold text-blue-800">{fmt(results.monthly)}</div>
+                                        <div className="text-2xl font-bold text-blue-800">{fmt(results.monthlyNetProfit)}</div>
                                     </div>
                                     <div className="bg-purple-50 rounded-lg p-4">
                                         <div className="text-sm text-purple-600 font-medium">10-Year ROI</div>
-                                        <div className="text-2xl font-bold text-purple-800">{pct(results.roi10)}</div>
+                                        <div className="text-2xl font-bold text-purple-800">{pct(results.roi10Year)}</div>
                                     </div>
                                     <div className="bg-orange-50 rounded-lg p-4">
                                         <div className="text-sm text-orange-600 font-medium">AC Energy Shifted</div>
-                                        <div className="text-lg font-bold text-orange-800">{realistic ? `${(results.acEnergyShifted || 0).toFixed(0)} kWh/year` : 'Generic calc'}</div>
-                                        <div className="text-xs text-orange-500">{realistic ? `${acHours}h × ${unrestrictedPeak}kW × ${acSeason * 30} days` : ''}</div>
+                                        <div className="text-lg font-bold text-orange-800">
+                                            {useRealisticCalculation ? `${(results.acEnergyShifted || 0).toFixed(0)} kWh/year` : 'Generic calculation'}
+                                        </div>
+                                        <div className="text-xs text-orange-500">
+                                            {useRealisticCalculation ? `${acRuntimeHours}h × ${unrestrictedPeakDemand}kW × ${acSeasonMonths * 30} days` : ''}
+                                        </div>
                                     </div>
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <div className="text-sm text-gray-600 font-medium">System Config</div>
-                                        <div className="text-lg font-bold text-gray-800">{results.actualBatteries} Batteries</div>
-                                        <div className="text-xs text-gray-500">{(results.actualCapacity || 0).toFixed(1)} kWh, {(results.actualOutput || 0).toFixed(1)} kW</div>
-                                    </div>
+                                    {results.actualBatteryCount && (
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <div className="text-sm text-gray-600 font-medium">System Configuration</div>
+                                            <div className="text-lg font-bold text-gray-800">{results.actualBatteryCount} Batteries</div>
+                                            <div className="text-xs text-gray-500">{(results.actualSystemCapacity || 0).toFixed(1)} kWh, {(results.actualSystemOutput || 0).toFixed(1)} kW</div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {realistic && results.actualBatteries && (
+                            {useRealisticCalculation && results.actualBatteryCount && (
                                 <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <h3 className="text-lg font-semibold mb-4">AC Analysis</h3>
+                                    <h3 className="text-lg font-semibold mb-4">AC Capability Analysis</h3>
                                     <div className="space-y-3">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Can Handle 5-ton AC:</span>
@@ -279,19 +369,29 @@
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">AC Runtime:</span>
-                                            <span className="font-medium">{(results.acRuntime || 0).toFixed(1)}h</span>
+                                            <span className="text-gray-600">AC-Only Runtime:</span>
+                                            <span className="font-medium">{(results.acRuntimeCapability || 0).toFixed(1)} hours</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">AC + House:</span>
-                                            <span className="font-medium">{(results.acPlusHouse || 0).toFixed(1)}h</span>
+                                            <span className="text-gray-600">AC + Household Runtime:</span>
+                                            <span className="font-medium">{(results.acPlusHouseholdRuntime || 0).toFixed(1)} hours</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Target (1.5h):</span>
-                                            <span className={`font-medium ${(results.acPlusHouse || 0) >= 1.5 ? 'text-green-600' : 'text-yellow-600'}`}>
-                                                {(results.acPlusHouse || 0) >= 1.5 ? '✅ MEETS' : '⚠️ BELOW'}
+                                            <span className="text-gray-600">Target Runtime (1.5h):</span>
+                                            <span className={`font-medium ${(results.acPlusHouseholdRuntime || 0) >= 1.5 ? 'text-green-600' : 'text-yellow-600'}`}>
+                                                {(results.acPlusHouseholdRuntime || 0) >= 1.5 ? '✅ MEETS TARGET' : '⚠️ BELOW TARGET'}
                                             </span>
                                         </div>
+                                        {results.actualBatteryCount === 3 && (results.acPlusHouseholdRuntime || 0) < 1.5 && (
+                                            <div className="mt-3 p-3 bg-yellow-50 rounded text-sm text-yellow-700">
+                                                💡 Consider smart AC cycling or adding 4th battery for full 1.5h runtime
+                                            </div>
+                                        )}
+                                        {results.actualBatteryCount === 1 && !results.canHandleAC && (
+                                            <div className="mt-3 p-3 bg-red-50 rounded text-sm text-red-700">
+                                                ❌ Single battery cannot run 5-ton AC. Consider 3-battery option.
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -300,29 +400,34 @@
                                 <h3 className="text-lg font-semibold mb-4">Cost Breakdown</h3>
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Purchase:</span>
-                                        <span className="font-medium">{fmt(price)}</span>
+                                        <span className="text-gray-600">Purchase Price:</span>
+                                        <span className="font-medium">{fmt(purchasePrice)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Tax Credit:</span>
-                                        <span className="font-medium text-green-600">-{fmt(results.fedSavings)}</span>
+                                        <span className="text-gray-600">Federal Tax Credit:</span>
+                                        <span className="font-medium text-green-600">-{fmt(results.federalTaxSavings)}</span>
                                     </div>
-                                    {smartPanel && (
+                                    {includeSolar && (
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Smart Panel:</span>
-                                            <span className="font-medium">{fmt(results.smartCost)}</span>
+                                            <span className="text-gray-600">Solar (after credit):</span>
+                                            <span className="font-medium">{fmt(results.solarCostAfterCredit)}</span>
                                         </div>
                                     )}
-                                    {solar && (
+                                    {includeSmartPanel && (
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Solar:</span>
-                                            <span className="font-medium">{fmt(results.solarCost)}</span>
+                                            <span className="text-gray-600">Smart Panel (after credit):</span>
+                                            <span className="font-medium">{fmt(results.smartPanelCostAfterCredit)}</span>
                                         </div>
                                     )}
                                     <div className="border-t pt-2 flex justify-between font-semibold">
                                         <span>Net Investment:</span>
-                                        <span>{fmt(results.totalCost)}</span>
+                                        <span>{fmt(results.totalSystemCost)}</span>
                                     </div>
+                                    {!includeSmartPanel && (
+                                        <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-700">
+                                            ⚠️ Without Smart Panel: Manual switching assumed (70% efficiency)
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -330,26 +435,30 @@
                                 <h3 className="text-lg font-semibold mb-4">Annual Savings</h3>
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Demand:</span>
-                                        <span className="font-medium">{fmt(results.demandSavings)}</span>
+                                        <span className="text-gray-600">Demand Charges:</span>
+                                        <span className="font-medium">{fmt(results.annualDemandSavings)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Arbitrage:</span>
-                                        <span className="font-medium">{fmt(results.arbitrageSavings)}</span>
+                                        <span className="text-gray-600">Energy Arbitrage:</span>
+                                        <span className="font-medium">{fmt(results.annualArbitrageSavings)}</span>
                                     </div>
-                                    {solar && (
+                                    {includeSolar && (results.annualSolarSavings || 0) > 0 && (
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Solar:</span>
-                                            <span className="font-medium">{fmt(results.solarSavings)}</span>
+                                            <span className="text-gray-600">Solar Benefits:</span>
+                                            <span className="font-medium">{fmt(results.annualSolarSavings)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Efficiency ({((results.effMult || 0) * 100).toFixed(0)}%):</span>
-                                        <span className="text-gray-500">{fmt(results.adjEnergy)}</span>
+                                        <span className="text-gray-500">Efficiency Applied ({((results.efficiencyMultiplier || 0) * 100).toFixed(0)}%):</span>
+                                        <span className="text-gray-500">{fmt(results.adjustedEnergySavings)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Tax Savings:</span>
+                                        <span className="font-medium">{fmt(results.adjustedTaxSavings)}</span>
                                     </div>
                                     <div className="border-t pt-2 flex justify-between font-semibold">
-                                        <span>Total:</span>
-                                        <span>{fmt(results.totalAnnual)}</span>
+                                        <span>Total Annual:</span>
+                                        <span>{fmt(results.totalAnnualSavings)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -359,15 +468,15 @@
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Total Savings:</span>
-                                        <span className="font-medium">{fmt(results.totalSavings10)}</span>
+                                        <span className="font-medium">{fmt(results.totalSavings10Year)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">System Cost:</span>
-                                        <span className="font-medium">-{fmt(results.totalCost)}</span>
+                                        <span className="font-medium">-{fmt(results.totalSystemCost)}</span>
                                     </div>
                                     <div className="border-t pt-2 flex justify-between font-semibold text-green-600">
                                         <span>Net Profit:</span>
-                                        <span>{fmt(results.netProfit10)}</span>
+                                        <span>{fmt(results.netProfit10Year)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -375,20 +484,23 @@
                     </div>
 
                     <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
-                        <h3 className="text-lg font-semibold mb-3">Notes</h3>
-                        <div className="text-sm text-gray-600 space-y-1">
-                            <p>• 30% tax credit expires Dec 31, 2025</p>
-                            <p>• Realistic mode uses actual vs unrestricted usage</p>
-                            <p>• Pricing: $4,400 (1), $6,699 (2), $8,999 (3), $11,299 (4 batteries)</p>
-                            <p>• AC analysis assumes 5-ton unit (10.3 kW)</p>
-                            <p>• Smart Panel enables 95% efficiency vs 70% manual</p>
+                        <h3 className="text-lg font-semibold mb-3">Important Notes</h3>
+                        <div className="text-sm text-gray-600 space-y-2">
+                            <p>• Federal tax credit of 30% expires December 31, 2025</p>
+                            <p>• Realistic mode accounts for current restricted usage vs unrestricted AC usage</p>
+                            <p>• Pricing: $4,400 (1 battery), $6,699 (2), $8,999 (3), $11,299 (4 batteries)</p>
+                            <p>• AC analysis assumes 5-ton unit (10.3 kW) with 1.5-hour target runtime</p>
+                            <p>• Smart Home Panel 2 required for automatic switching - manual switching assumes 70% efficiency</p>
+                            <p>• Seasonal calculations differentiate AC season vs off-season usage patterns</p>
+                            <p>• System is expandable up to 15 batteries total for future needs</p>
+                            <p>• Actual results may vary based on usage patterns, weather, and utility rate changes</p>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        ReactDOM.render(<Calculator />, document.getElementById('root'));
+        ReactDOM.render(<EcoFlowROICalculator />, document.getElementById('root'));
     </script>
 </body>
 </html>
